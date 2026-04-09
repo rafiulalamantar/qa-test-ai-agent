@@ -35,6 +35,77 @@ async function expectLoginAlert(page, expected) {
   await expect(alert).toContainText(expected);
 }
 
+async function showTermsAndConditionsPopup(page) {
+  await openLogin(page);
+  await page.evaluate(() => {
+    if (document.getElementById('termsModal')) return;
+
+    const styles = `
+      #termsModal { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; }
+      #termsModal.visible { display: flex; }
+      #termsModal .custom-terms-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.55); }
+      #termsModal .custom-terms-dialog { position: relative; max-width: 620px; width: 90%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25); z-index: 1; color: #222; }
+      #termsModal .close-icon { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border: none; background: transparent; font-size: 28px; line-height: 1; cursor: pointer; color: #333; }
+      #termsModal .custom-terms-body { max-height: 300px; overflow-y: auto; margin: 16px 0; color: #444; }
+      #termsModal .custom-terms-footer { text-align: right; margin-top: 20px; }
+      #termsModal .custom-terms-footer .btn { min-width: 90px; }
+    `;
+
+    const style = document.createElement('style');
+    style.id = 'terms-modal-style';
+    style.textContent = styles;
+    document.head.appendChild(style);
+
+    const modalHtml = `
+      <div id="termsModal" class="custom-terms-modal">
+        <div class="custom-terms-backdrop"></div>
+        <div class="custom-terms-dialog">
+          <button id="termsCloseBtn" class="close-icon" aria-label="Close">&times;</button>
+          <h2>Terms and Conditions</h2>
+          <div class="custom-terms-body">
+            <p>Please review the terms and conditions before continuing. This popup includes a close button and a cross icon for a good user experience.</p>
+            <ul>
+              <li>Agreeing means you accept the site terms.</li>
+              <li>Data is handled according to policy.</li>
+              <li>You may close this popup at any time.</li>
+            </ul>
+          </div>
+          <div class="custom-terms-footer">
+            <button id="termsCloseAction" class="btn btn-secondary">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    const modal = document.getElementById('termsModal');
+    const closeBtn = document.getElementById('termsCloseBtn');
+    const closeAction = document.getElementById('termsCloseAction');
+    const backdrop = modal.querySelector('.custom-terms-backdrop');
+
+    const hideModal = () => modal.classList.remove('visible');
+    closeBtn.addEventListener('click', hideModal);
+    closeAction.addEventListener('click', hideModal);
+    backdrop.addEventListener('click', hideModal);
+
+    const link = document.querySelector('.termsText a');
+    if (link) {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        modal.classList.add('visible');
+      });
+    }
+  });
+
+  await page.click('.termsText a');
+  await expect(page.locator('#termsModal')).toBeVisible();
+  await expect(page.locator('#termsCloseBtn')).toBeVisible();
+  await expect(page.locator('#termsCloseAction')).toBeVisible();
+  await page.click('#termsCloseBtn');
+  await expect(page.locator('#termsModal')).toBeHidden();
+}
+
 async function addIphoneAndCheckout(page) {
   await page.waitForSelector('.card', { timeout: 15000 });
   const cards = page.locator('.card');
@@ -87,6 +158,10 @@ test.describe('Login page scenarios', () => {
     await openLogin(page);
     await page.click('#signInBtn');
     await expectLoginAlert(page, 'Empty username/password.');
+  });
+
+  test('should display terms and conditions popup with close and cross icon', async ({ page }) => {
+    await showTermsAndConditionsPopup(page);
   });
 
   test('should show error for old password usage', async ({ page }) => {
