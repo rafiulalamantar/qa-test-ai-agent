@@ -1,66 +1,76 @@
 const { test, expect } = require('@playwright/test');
+const { LoginPage } = require('../pages/loginPage');
+const {
+  VALID_USERNAME,
+  VALID_PASSWORD,
+  OLD_PASSWORD,
+  INVALID_USERNAME,
+  INVALID_PASSWORD,
+  DEFAULT_LOGIN_DATA,
+} = require('../data/loginCredentials');
 
-test('Login, add iPhone X, checkout and purchase', async ({ page }) => {
-  test.setTimeout(120000);
+test.describe('Login page tests', () => {
+  test('should login successfully and reach the shop page', async ({ page }) => {
+    const loginPage = new LoginPage(page);
 
-  // Navigate to login page
-  await page.goto('https://rahulshettyacademy.com/loginpagePractise/');
-  await page.waitForLoadState('domcontentloaded');
+    await loginPage.goto();
+    await loginPage.login(DEFAULT_LOGIN_DATA);
+    await expect(page).toHaveURL(/.*shop/);
+  });
 
-  // Fill login credentials
-  await page.fill('input[name="username"]', 'rahulshettyacademy');
-  await page.fill('input[name="password"]', 'Learning@830$3mK2');
+  test('should show error for empty username/password', async ({ page }) => {
+    const loginPage = new LoginPage(page);
 
-  // Select Student from dropdown
-  await page.selectOption('select', { label: 'Student' });
+    await loginPage.goto();
+    await loginPage.submit();
+    await loginPage.expectError('Empty username/password.');
+  });
 
-  // Check terms and conditions checkbox
-  await page.locator('input[type="checkbox"]').first().check();
+  test('should display terms and conditions popup with close and cross icon', async ({ page }) => {
+    const loginPage = new LoginPage(page);
 
-  // Submit login form
-  await page.click('#signInBtn');
+    await loginPage.goto();
+    await loginPage.showTermsModal();
+  });
 
-  // Wait for products page to load
-  await page.waitForSelector('.card', { timeout: 15000 });
+  test('should show error for old password usage', async ({ page }) => {
+    const loginPage = new LoginPage(page);
 
-  // Confirm product page loaded
-  const cards = page.locator('.card');
-  const count = await cards.count();
-  expect(count).toBeGreaterThan(0);
+    await loginPage.goto();
+    await loginPage.login({
+      username: VALID_USERNAME,
+      password: OLD_PASSWORD,
+      role: 'admin',
+      acceptTerms: true,
+    });
+    await loginPage.expectError(
+      'Old password "' + OLD_PASSWORD + '" is no longer valid. Please use the new password "' + VALID_PASSWORD + '".'
+    );
+  });
 
-  // Find and add iPhone X to cart
-  let found = false;
-  for (let i = 0; i < count; i++) {
-    const card = cards.nth(i);
-    const text = await card.textContent();
-    if (text.toLowerCase().includes('iphone x')) {
-      await card.locator('button:has-text("Add")').click();
-      found = true;
-      break;
-    }
-  }
+  test('should show error for incorrect credentials', async ({ page }) => {
+    const loginPage = new LoginPage(page);
 
-  expect(found).toBeTruthy();
+    await loginPage.goto();
+    await loginPage.login({
+      username: INVALID_USERNAME,
+      password: INVALID_PASSWORD,
+      role: 'admin',
+      acceptTerms: true,
+    });
+    await loginPage.expectError('Incorrect username/password.');
+  });
 
-  // Go to cart page
-  await page.click('a:has-text("Checkout")');
-  await page.waitForLoadState('networkidle');
+  test('should show user role modal and allow valid login as user', async ({ page }) => {
+    const loginPage = new LoginPage(page);
 
-  // Verify the cart contains exactly one iPhone X row
-  const productRows = page.locator('tr:has-text("iphone X")');
-  expect(await productRows.count()).toBe(1);
-
-  // Proceed to final checkout and delivery location
-  await page.click('button:has-text("Checkout")');
-  await page.waitForSelector('#country', { timeout: 15000 });
-  await page.fill('#country', 'India');
-
-  // Agree to terms and purchase
-  await page.locator('label[for="checkbox2"]').click();
-  await page.click('input[type="submit"]');
-
-  // Verify success message
-  await page.waitForSelector('text=Success', { timeout: 15000 });
-  const successText = await page.textContent('body');
-  expect(successText.toLowerCase()).toContain('success');
+    await loginPage.goto();
+    await loginPage.login({
+      username: 'rahulshettyacademy',
+      password: 'Learning@830$3mK2',
+      role: 'user',
+      acceptTerms: true,
+    });
+    await expect(page).toHaveURL(/.*shop/);
+  });
 });
