@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suite name="Playwright Page Object Suite">
+  <test name="Login Page Tests">
+    <file>tests/login.spec.js</file>
+  </test>
+  <test name="Shop Page Tests">
+    <file>tests/shop.spec.js</file>
+  </test>
+  <test name="Checkout Page Tests">
+    <file>tests/checkout.spec.js</file>
+  </test>
+</suite>
