@@ -1,8 +1,18 @@
-const VALID_USERNAME = 'rahulshettyacademy';
-const VALID_PASSWORD = 'Learning@830$3mK2';
-const OLD_PASSWORD = 'learning';
-const INVALID_USERNAME = 'baduser';
-const INVALID_PASSWORD = 'badpass';
+require('dotenv').config();
+
+const getRequiredEnv = (name) => {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Environment variable ${name} is required to run login tests.`);
+  }
+  return value;
+};
+
+const VALID_USERNAME = getRequiredEnv('VALID_USERNAME');
+const VALID_PASSWORD = getRequiredEnv('VALID_PASSWORD');
+const OLD_PASSWORD = getRequiredEnv('OLD_PASSWORD');
+const INVALID_USERNAME = process.env.INVALID_USERNAME || 'baduser';
+const INVALID_PASSWORD = process.env.INVALID_PASSWORD || 'badpass';
 
 const DEFAULT_LOGIN_DATA = {
   username: VALID_USERNAME,

@@ -66,8 +66,8 @@ test.describe('Login page tests', () => {
 
     await loginPage.goto();
     await loginPage.login({
-      username: 'rahulshettyacademy',
-      password: 'Learning@830$3mK2',
+      username: VALID_USERNAME,
+      password: VALID_PASSWORD,
       role: 'user',
       acceptTerms: true,
     });

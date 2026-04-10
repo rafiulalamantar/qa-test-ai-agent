@@ -1,25 +1,20 @@
 # QA Test AI Agent - Playwright Testing Project
 
-A comprehensive testing automation project using [Playwright](https://playwright.dev/) for end-to-end testing across multiple browsers.
+A Playwright automation project using a page object model and XML-style suite runner.
 
 ## Overview
 
-This project provides a robust setup for automated web testing with Playwright, supporting Chromium, Firefox, and WebKit browsers with JavaScript.
+This project contains end-to-end Playwright tests for the `/loginpagePractise/` flow, including login, shop, and checkout page scenarios.
 
 ## Prerequisites
 
 - Node.js 16 or higher
-- npm or yarn package manager
+- npm package manager
 
 ## Installation
 
-1. Install project dependencies:
 ```bash
 npm install
-```
-
-2. Install Playwright browsers:
-```bash
 npx playwright install
 ```
 
@@ -27,89 +22,110 @@ npx playwright install
 
 ```
 qa-test-ai-agent/
-├── tests/                  # Test files
-│   └── example.spec.js    # Sample test file
+├── data/                  # Shared test data
+├── pages/                 # Page object classes
+│   ├── loginPage.js
+│   ├── shopPage.js
+│   └── checkoutPage.js
+├── scripts/               # Custom helper scripts
+│   └── run-suite.js
+├── tests/                 # Playwright specs
+│   ├── login.spec.js
+│   ├── shop.spec.js
+│   └── checkout.spec.js
+├── suite.xml              # XML-style suite file
 ├── playwright.config.js   # Playwright configuration
-├── package.json          # Project dependencies
-├── .gitignore           # Git ignore rules
-└── README.md            # This file
+├── package.json           # NPM scripts and dependencies
+└── README.md              # Project documentation
 ```
 
-## Running Tests
+## Commands
 
-### Run all tests
+### Run all Playwright tests
+
 ```bash
 npm test
 ```
 
+### Run XML-style suite
+
+```bash
+npm run test:suite
+```
+
 ### Run tests in UI mode
+
 ```bash
 npm run test:ui
 ```
 
 ### Run tests in debug mode
+
 ```bash
 npm run test:debug
 ```
 
-### Run tests in headed mode (visible browser)
+### Run tests in headed mode
+
 ```bash
 npm run test:headed
 ```
 
-### View test report
+### Environment variables
+
+This repository does not store login credentials in source control. Use a local `.env` file for sensitive values:
+
+1. Copy `.env.example` to `.env`.
+2. Add your credentials in `.env`.
+
+Example `.env` content:
+
+```env
+VALID_USERNAME=your_username
+VALID_PASSWORD=your_password
+OLD_PASSWORD=your_old_password
+```
+
+The `.env` file is ignored by Git via `.gitignore`, so it will not be committed.
+
+Then run the test command:
+
+```bash
+npm install
+npm test
+```
+
+### View generated HTML report
+
 ```bash
 npm run test:report
 ```
 
+## Suite Runner
+
+The root `suite.xml` file lists the spec files to run sequentially.
+The script `scripts/run-suite.js` reads `suite.xml` and executes each listed spec with Playwright.
+
+## Test Coverage
+
+- `tests/login.spec.js` — login validation, role selection, terms popup
+- `tests/shop.spec.js` — product add-to-cart and checkout navigation
+- `tests/checkout.spec.js` — positive, negative, and edge checkout scenarios
+
 ## Configuration
 
-### Playwright Config (`playwright.config.ts`)
+The current `playwright.config.js` uses:
+- `testDir: './tests'`
+- `baseURL: 'https://rahulshettyacademy.com/loginpagePractise/'`
+- Chromium browser in headed mode
+- HTML reporting
+- `trace: 'on-first-retry'`
 
-The configuration includes:
-- **Test directory**: `./tests`
-- **Browsers**: Chromium, Firefox, WebKit
-- **Reporter**: HTML report
-- **Base URL**: http://localhost:3000 (configurable)
-- **Parallel execution**: Enabled by default
-- **Web Server**: Optional integration for local dev server
+## Notes
 
-Configure the `baseURL` in `playwright.config.js` to match your application's URL.
-
-## Writing Tests
-
-Tests follow Playwright's standard format. Example:
-
-```javascript
-const { test, expect } = require('@playwright/test');
-
-test('example test', async ({ page }) => {
-  await page.goto('http://localhost:3000');
-  await expect(page).toHaveTitle(/Expected Title/);
-});
-```
-
-## Key Features
-
-- ✅ Cross-browser testing (Chrome, Firefox, Safari)
-- ✅ Parallel test execution
-- ✅ HTML test reports
-- ✅ UI mode for debug
-- ✅ JavaScript support
-- ✅ Trace recording for failed tests
-
-## Tips
-
-- Use `--headed` flag to see the browser while tests run
-- Use `--debug` flag to step through tests interactively
-- Check `playwright-report/` directory for detailed results
-- Tests run in parallel by default for faster execution
-
-## Resources
-
-- [Playwright Documentation](https://playwright.dev/)
-- [Playwright API Reference](https://playwright.dev/docs/api/class-playwright)
-- [Best Practices](https://playwright.dev/docs/best-practices)
+- Page objects are implemented under `pages/`
+- Credential values are centralized in `data/loginCredentials.js`
+- `npm run test:suite` runs the suite in the order defined by `suite.xml`
 
 ## License
 
